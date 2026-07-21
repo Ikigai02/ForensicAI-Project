@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForensicAI - DataStand</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f4f8; 
+            color: #111827;
+            overflow-x: hidden;
+        }
+
+        /* --- Navigation Bar --- */
+        .navbar {
+            background-color: #fff;
+            padding: 15px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-container { display: flex; align-items: center; }
+        
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            margin-right: 12px;
+        }
+
+        .logo-text { font-size: 20px; font-weight: 800; color: #1f2937; }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #4b5563;
+            font-weight: 600;
+            margin-left: 24px;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active { color: #3b82f6; }
+
+        /* --- Main Layout Engine (Default) --- */
+        .app-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 65px);
+            padding: 40px;
+            box-sizing: border-box;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- Input Panel (Left Side) --- */
+        .input-panel {
+            display: flex;
+            align-items: center;
+            gap: 80px;
+            transition: all 0.5s ease;
+        }
+
+        .hero-visuals {
+            display: flex;
+            flex-direction: column;
+            width: 450px; 
+        }
+
+        .overlap-container {
+            position: relative;
+            height: 420px; 
+            width: 100%;
+            margin-bottom: 25px;
+            transition: all 0.5s ease;
+        }
+
+        .receipt-front {
+            position: absolute;
+            left: 20px;
+            top: 0;
+            height: 400px; 
+            width: auto;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            z-index: 2;
+            transition: all 0.5s ease;
+        }
+
+        .receipt-back {
+            position: absolute;
+            left: 150px; 
+            top: 50px; 
+            height: 320px; 
+            width: auto;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            transition: all 0.5s ease;
+        }
+
+        .headline {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            margin: 0 0 15px 0;
+            color: #111827;
+            transition: all 0.5s ease;
+        }
+
+        .subtext {
+            font-size: 20px;
+            color: #4b5563;
+            margin: 0;
+        }
+
+        /* Upload Card with Drag-and-Drop styling */
+        .upload-card {
+            background-color: #fff;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+            padding: 60px 40px;
+            text-align: center;
+            width: 380px;
+            box-sizing: border-box;
+            border: 2px dashed transparent;
+            transition: all 0.2s ease;
+        }
+
+        .upload-card.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        input[type="file"] { display: none; }
+
+        .btn-upload {
+            background-color: #3b82f6;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 16px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            display: inline-block;
+            transition: all 0.2s;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+            margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .btn-upload:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        }
+        .upload-hint { color: #6b7280; font-weight: 500; }
+
+        /* =========================================
+            RESPONSIVE GRID LAYOUT (The CSS Fix!)
+            ========================================= */
+        
+        .app-wrapper.split-mode {
+            display: grid;
+            grid-template-columns: 2fr 4.5fr 2.5fr; 
+            gap: 2%; 
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px 3%; 
+            align-items: start;
+            box-sizing: border-box;
+        }
+
+        /* Column 1: Input Panel */
+        .split-mode .input-panel {
+            flex-direction: column;
+            gap: 20px;
+            width: 100%; 
+        }
+        .split-mode .overlap-container { height: 260px; margin-bottom: 10px;}
+        .split-mode .receipt-front { height: 250px; left: 0px; }
+        .split-mode .receipt-back { height: 200px; left: 100px; top: 25px; }
+        .split-mode .headline { font-size: 28px; }
+        .split-mode .subtext { font-size: 16px; }
+        .split-mode .upload-card { width: 100%; padding: 30px 20px; border: 2px dashed transparent; }
+        .split-mode .btn-upload { font-size: 16px; padding: 12px 20px; margin-bottom: 10px;}
+
+        /* Column 2: Center Analysis Panel */
+        .analysis-panel {
+            width: 100%;
+            background-color: #fff;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+            padding: 30px;
+            box-sizing: border-box;
+            animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Column 3: Right Score Panel */
+        .score-panel {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px; 
+            animation: slideInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* -----------------------------------------
+            CSS MEDIA QUERIES (Adjusts to screen size)
+            ----------------------------------------- */
+        
+        @media (max-width: 1200px) {
+            .app-wrapper.split-mode {
+                grid-template-columns: 1fr 2fr;
+            }
+            .score-panel {
+                grid-column: 1 / -1;
+                flex-direction: row; 
+            }
+            .score-header-box, .result-description-box {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .app-wrapper.split-mode {
+                grid-template-columns: 1fr;
+            }
+            .score-panel {
+                flex-direction: column; 
+            }
+            .image-compare-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        /* --- Middle Column Styles (3 Images & Insights) --- */
+        .analysis-title {
+            font-size: 22px; 
+            font-weight: 800;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #1f2937;
+        }
+
+        .image-compare-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 15px;
+            margin-bottom: 30px;
+            align-items: start;
+        }
+        
+        .image-box { 
+            text-align: center; 
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .image-box h4 { margin: 0 0 12px 0; color: #4b5563; font-size: 14px; }
+        
+        .image-box img {
+            width: 100%;
+            aspect-ratio: 3 / 4; 
+            height: auto;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+            background: #f9fafb;
+            object-fit: contain;
+        }
+        
+        .image-box p {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .analysis-insights {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px; 
+        }
+        .analysis-insights h3 { margin-top: 0; color: #1f2937; margin-bottom: 10px; font-size: 16px;}
+        .analysis-insights ul { padding-left: 20px; margin-bottom: 0; }
+        .analysis-insights li { margin-bottom: 6px; color: #374151; font-size: 14px; line-height: 1.5; }
+
+        /* --- Right Column Styles (Score & Description) --- */
+        .score-header-box {
+            display: flex;
+            align-items: center;
+            gap: 20px; 
+            padding: 20px; 
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            box-sizing: border-box;
+        }
+
+        .score-circle-wrapper {
+            position: relative;
+            width: 75px; 
+            height: 75px;
+            flex-shrink: 0;
+        }
+        .circular-chart { display: block; width: 100%; height: 100%; }
+        .circle-bg { fill: none; stroke: #e2e8f0; stroke-width: 3.5; }
+        .circle { fill: none; stroke-width: 3.5; stroke-linecap: round; animation: fillProgress 1.2s ease-out forwards; }
+        
+        @keyframes fillProgress { 0% { stroke-dasharray: 0, 100; } }
+
+        .circle-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 13px; 
+            font-weight: 900;
+            color: #111827;
+            margin: 0;
+            padding: 0;
+        }
+
+        .score-text-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .score-label {
+            font-size: 12px; 
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .score-status {
+            font-size: 24px; 
+            font-weight: 900;
+            margin: 0;
+        }
+
+        /* Description Box */
+        .result-description-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            border: 1px solid #e5e7eb;
+            color: #4b5563;
+            font-size: 14px; 
+            line-height: 1.6;
+            box-sizing: border-box;
+        }
+        .result-description-box h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #1f2937;
+            font-size: 16px; 
+        }
+        .result-description-box b { color: #111827; }
+
+        /* Dynamic Theme Colors */
+        .is-authentic .circle { stroke: #16a34a; }
+        .is-authentic .score-status { color: #16a34a; }
+
+        .is-tampered .circle { stroke: #dc2626; }
+        .is-tampered .score-status { color: #dc2626; }
+
+        .is-suspicious .circle { stroke: #d97706; }
+        .is-suspicious .score-status { color: #d97706; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="logo-container">
+            <div class="logo-icon">F.AI</div>
+            <span class="logo-text">Forensic AI</span>
+        </div>
+        <div class="nav-links">
+            <a href="/">Uploads</a>
+            <a href="/" class="active">Analyze</a>
+            
+        </div>
+    </nav>
+
+    <!-- Main Application Wrapper -->
+    <div class="app-wrapper {% if result %}split-mode{% endif %}">
+        
+        <!-- COLUMN 1: Input Panel -->
+        <div class="input-panel">
+            <div class="hero-visuals">
+                <div class="overlap-container">
+                    <img src="/static/f4aa9bfb-1453-479a-92ee-6f4a8a9f68df.png" class="receipt-front" alt="Maybank">
+                    <img src="/static/9dfe6961-d45f-4061-bf58-a014d3e9636c.jpg" class="receipt-back" alt="Bank Islam">
+                </div>
+                <h1 class="headline">Tool to Analyze Your Bank Receipt</h1>
+                <p class="subtext">100% Automatically and <b>Securely</b></p>
+            </div>
+            
+            <div class="upload-card" id="dropZone">
+                <form action="/" method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <label for="file-upload" class="btn-upload">Upload Image</label>
+                    <input id="file-upload" type="file" name="file" accept="image/*" onchange="document.getElementById('uploadForm').submit();">
+                </form>
+                <div class="upload-hint">or drop a file,<br>paste image </div>
+            </div>
+        </div>
+
+        {% if result %}
+        
+        <!-- COLUMN 2: Image Analysis (Grid layout keeps it contained) -->
+        <div class="analysis-panel">
+            <h2 class="analysis-title">Forensic Image Analysis</h2>
+            
+            <div class="image-compare-grid">
+                <!-- Original Image -->
+                <div class="image-box">
+                    <h4>Original Upload</h4>
+                    <img src="/static/uploads/{{ filename }}?t={{ timestamp }}" alt="Original Image">
+                </div>
+                <!-- ELA Image -->
+                <div class="image-box">
+                    <h4>Error Level Analysis</h4>
+                    <img src="/static/uploads/{{ ela_path }}?t={{ timestamp }}" alt="ELA Analysis">
+                    <p>{{ variance_score }}</p>
+                </div>
+                <!-- Highlighted Anomalies -->
+                <div class="image-box">
+                    <h4>Detected Anomalies</h4>
+                    <img src="/static/uploads/latest_highlighted.png?t={{ timestamp }}" alt="Highlighted Regions">
+                </div>
+            </div>
+
+            <div class="analysis-insights">
+                <h3>Technical Details:</h3>
+                <ul>
+                    {% for insight in analysis_insights %}
+                        <li>{{ insight }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- COLUMN 3: Score & Description -->
+        <div class="score-panel">
+            
+            <div class="score-header-box 
+                {% if 'TAMPERED' in result %}is-tampered
+                {% elif 'SUSPICIOUS' in result %}is-suspicious
+                {% else %}is-authentic{% endif %}">
+                
+                <div class="score-circle-wrapper">
+                    <svg viewBox="0 0 36 36" class="circular-chart">
+                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="circle" stroke-dasharray="{{ confidence | replace('%', '') }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <div class="circle-text">{{ confidence }}</div>
+                </div>
+
+                <div class="score-text-content">
+                    <div class="score-label">Analysis Result</div>
+                    <h2 class="score-status">{{ result }}</h2>
+                </div>
+            </div>
+
+            <div class="result-description-box">
+                <h4>What does this mean?</h4>
+                
+                {% if 'TAMPERED' in result %}
+                    <p>Our deep learning model has detected significant forensic anomalies. The Error Level Analysis (ELA) indicates localized pixel manipulation typical of forged or edited receipts.</p>
+                    <p><b>Recommendation:</b> Immediate manual verification is strongly advised. Do not accept this document as proof of payment.</p>
+                
+                {% elif 'SUSPICIOUS' in result %}
+                    <p>The analysis yielded inconclusive results. While some compression artifacts are present, they do not definitively confirm tampering.</p>
+                    <p><b>Recommendation:</b> Proceed with caution. We recommend requesting the original PDF or verifying the transaction directly with the issuing bank.</p>
+                
+                {% else %}
+                    <p>The document passed forensic analysis with a high degree of confidence. ELA variance and pixel compression levels are consistent with an untampered, original digital export.</p>
+                    <p><b>Recommendation:</b> No digital forgery detected. The document appears safe to process.</p>
+                {% endif %}
+            </div>
+            
+        </div>
+        
+        {% endif %}
+
+    </div>
+
+    <!-- JavaScript to handle Drag-and-Drop and Clipboard Paste -->
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('file-upload');
+        const uploadForm = document.getElementById('uploadForm');
+
+        // Prevent default behavior for drag events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop zone when item enters
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        // Handle dropped files
+        dropZone.addEventListener('drop', (e) => {
+            let dt = e.dataTransfer;
+            let files = dt.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                uploadForm.submit();
+            }
+        });
+
+        // Handle clipboard paste (Ctrl + V) anywhere on the page
+        window.addEventListener('paste', (e) => {
+            let items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    let blob = items[i].getAsFile();
+                    let container = new DataTransfer();
+                    container.items.add(blob);
+                    fileInput.files = container.files;
+                    uploadForm.submit();
+                    break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

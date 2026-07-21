@@ -63,8 +63,14 @@ def prepare_ela_image(path, quality=None):
 
     return ela.resize((128,128), Image.LANCZOS), cv_flag
 
-@app.route("/", methods=["GET","POST"])
-def index():
+# Route 1: Serves the new Gemini-style product landing page showcase
+@app.route("/", methods=["GET"])
+def home():
+    return render_template("index.html")
+
+# Route 2: Serves your core tool dashboard interface and analysis processing
+@app.route("/dashboard", methods=["GET","POST"])
+def dashboard():
 
     for f in glob.glob(os.path.join(UPLOAD_FOLDER,"*")):
         try:
@@ -128,7 +134,7 @@ def index():
             analysis.append(f"📊 ELA Stats — Variance: {ela_variance:.1f} | Peak: {ela_peak:.1f}")
 
             return render_template(
-                "index.html",
+                "app.html",
                 result=result,
                 confidence=f"{confidence:.2f}%",
                 filename=file.filename,
@@ -138,7 +144,7 @@ def index():
                 timestamp=int(time.time())
             )
 
-    return render_template("index.html")
+    return render_template("app.html")
 
 if __name__=="__main__":
     app.run(debug=True)
