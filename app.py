@@ -8,7 +8,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from PIL import Image, ImageChops, ImageEnhance
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
