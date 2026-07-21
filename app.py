@@ -4,8 +4,7 @@ import time
 import numpy as np
 import cv2
 from flask import Flask, request, render_template
-from tensorflow.keras.models import load_model
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+from ai_edge_litert.interpreter import Interpreter
 from PIL import Image, ImageChops, ImageEnhance
 
 app = Flask(__name__, template_folder='templates')
@@ -14,7 +13,21 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-model = load_model("forensic_ai_model.h5")
+# TFLite runtime (ai-edge-litert) instead of full TensorFlow — same MobileNetV2
+# model, but a fraction of the RAM footprint, which matters on Render's free tier.
+interpreter = Interpreter(model_path="forensic_ai_model.tflite")
+interpreter.allocate_tensors()
+_input_index = interpreter.get_input_details()[0]["index"]
+_output_index = interpreter.get_output_details()[0]["index"]
+
+def preprocess_input(x):
+    # Equivalent to tensorflow.keras.applications.mobilenet_v2.preprocess_input
+    return x / 127.5 - 1.0
+
+def predict(x):
+    interpreter.set_tensor(_input_index, x)
+    interpreter.invoke()
+    return interpreter.get_tensor(_output_index)
 
 # ELA quality LOCKED to 75 — matches training pipeline
 ELA_QUALITY = 75
@@ -94,7 +107,7 @@ def dashboard():
             ela = ela.reshape(1, 128, 128, 3)
             ela = preprocess_input(ela)
 
-            prediction = float(model.predict(ela, verbose=0)[0][0])
+            prediction = float(predict(ela)[0][0])
 
             # =====================================================
             # THREE-TIER DECISION SYSTEM

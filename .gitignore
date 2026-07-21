@@ -3,3 +3,4 @@ __pycache__/
 .vscode/
 static/uploads/*
 !static/uploads/.gitkeep
+temp_resave.jpg
